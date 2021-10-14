@@ -1,0 +1,109 @@
+---
+title: "Assignment 1"
+author: "Kayla Choi - MA615 2021"
+date: "9/20/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#include the necessary library
+library(tidyverse)
+```
+
+```{r}
+#source the R script that holds our functions 
+source(file="hand_functions.R", echo = TRUE)
+```
+
+```{r}
+# call built-in data mtcars.
+data(mtcars)
+```
+
+```{r}
+# Select only car models where mpg<20
+mtcars_mpg2 <- mtcars[mtcars$mpg < 20,]
+
+# Reduce the variables to mpg, cyl, disp, hp, gears
+mtcars_mpg2 <- mtcars_mpg2[, c(1,2,3,4,10)]
+
+#look at the data frame and its summary
+head(mtcars_mpg2)
+summary(mtcars_mpg2)
+```
+  
+Looking at the summary of mtcars_mpg2 data frame, it is evident that the descriptive statistics for cyl (number of cylinders) and gear are not meaningful. This is because they are factor variables and not continuous.    
+  
+```{r}
+# Now use the function from hand_functions.R and store in a variable
+sp_out <- sum_special(mtcars_mpg2)
+sp_out
+```
+   
+This function outputs a list of summary statistics, including mean, variance, covariance, and correlation. It is interesting to note that there is a high negative correlation between disp and mpg. Let's explore that in the next ggplot.    
+   
+   
+```{r}
+#explore visualization of disp vs mpg
+ggplot(mtcars_mpg2) +
+  aes(x = disp, y = mpg) + 
+  geom_point(shape = "bullet", size = 4L, colour = "#B22222") +
+  geom_smooth(span = 0.5) +
+  theme_bw()
+```
+  
+From this plot, we can see that as displacement (cu.in.) increases, mpg generally decreases. However, I notice two points that do not follow this general trend. I want to look at which ones these are.    
+  
+```{r}
+#look at the two unusual points
+disp_over_350 <- mtcars_mpg2[(mtcars_mpg2$disp) >= 350, ]
+unusual_mpg <- disp_over_350[(disp_over_350$mpg) >= 17, ]
+unusual_mpg
+```
+  
+They are the Hornet Sportabout and the Pontiac Firebird.   
+  
+  
+Next, let's look at cylinders vs mpg. Because cylinder is a factor, as I mentioned above when we looked at the summary statistics, we need to make sure we convert it via as.factor().    
+```{r}
+#explore visualization of cyl vs mpg 
+ggplot(mtcars_mpg2, aes(x=as.factor(cyl), y=mpg)) + 
+    geom_boxplot(fill="slateblue", alpha=0.2) + 
+    stat_summary(fun=mean, geom="point", shape=20, size=4, color = "blue") +
+    xlab("cyl") + 
+    theme_bw()
+```
+  
+For cars with 8 cylinders, there is a larger spread in the mpg and the median is lower. I have added the mean as well in the visualization. There are also two outliers with 8 cylinder cars. I want to look at which ones these are.    
+  
+```{r}
+cyl_8 <- mtcars_mpg2[(mtcars_mpg2$cyl) ==8 , ]
+outlier_cyl_large <- cyl_8[(cyl_8$mpg) >= 18.75, ]
+outlier_cyl_small <- cyl_8[(cyl_8$mpg) <= 12.5, ]
+outlier_cyl_large
+outlier_cyl_small
+```
+  
+The Pontiac Firebird has a high mpg compared to other 8-cylinder models.   
+I only saw one distinct point that was a low outlier, but it turns out that there are actually two models that have the same mpg: Cadillac Fleetwood and Lincoln Continental.
+
+  
+  
+We also saw from the sum_special function that there is a high positive correlation between cylinder and displacement. Let's explore that.    
+```{r}
+#explore visualization of cyl vs mpg 
+ggplot(mtcars_mpg2, aes(x=as.factor(cyl), y=disp)) + 
+    geom_boxplot(fill="slateblue", alpha=0.2) + 
+    stat_summary(fun=mean, geom="point", shape=20, size=4, color = "blue") +
+    xlab("cyl") + 
+    theme_bw()
+```
+  
+For cars with 6 cylinders, the displacement is much lower, has a smaller spread, and is left-skewed. The 8 cylinder displacement has a significantly higher median displacement and a larger spread.     
+  
